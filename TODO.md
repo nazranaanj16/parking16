@@ -1,0 +1,2 @@
+- [x] Update CSS in location.html to add mobile responsiveness with media queries
+- [x] Redesign location.html to make it attractive and parking-focused
