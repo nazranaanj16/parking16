@@ -3,351 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Parking Spots</title>
+    <title>Free Parking Spots - Map View</title>
     <style>
-        * {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2d2d2d 100%);
-            color: #ffffff;
             min-height: 100vh;
-            overflow-x: hidden;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="map-pattern" patternUnits="userSpaceOnUse" width="100" height="100"><rect width="100" height="100" fill="%23f0f8ff"/><path d="M10 10 L90 10 L90 90 L10 90 Z" fill="none" stroke="%23add8e6" stroke-width="1"/><path d="M50 0 L50 100 M0 50 L100 50" stroke="%23add8e6" stroke-width="0.5"/><circle cx="50" cy="50" r="3" fill="%23ff6b6b"/><circle cx="20" cy="20" r="2" fill="%234ecdc4"/><circle cx="80" cy="30" r="2" fill="%23ffa500"/></pattern></defs><rect width="1000" height="1000" fill="url(%23map-pattern)"/></svg>') repeat,
+                    linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            background-attachment: fixed;
+            color: #333;
         }
 
-        .hero {
-            position: relative;
-            height: 60vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .overlay {
+            background: rgba(255, 255, 255, 0.9);
+            min-height: 100vh;
+            backdrop-filter: blur(1px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 40px 20px;
             text-align: center;
-            background: linear-gradient(45deg, #0c0c0c, #1a1a1a);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: -30px auto 0;
+            padding: 60px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .parking-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
             overflow: hidden;
         }
 
-        .hero::before {
+        .parking-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%"><stop offset="0%" style="stop-color:%2300ff88;stop-opacity:0.3"/><stop offset="100%" style="stop-color:%2300ff88;stop-opacity:0"/></radialGradient></defs><circle cx="500" cy="500" r="400" fill="url(%23a)"/></svg>') no-repeat center;
-            background-size: cover;
-            animation: pulse 4s ease-in-out infinite;
+            height: 4px;
+            background: linear-gradient(90deg, #1976d2, #4ecdc4, #ffa500);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.05); }
+        .parking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: #1976d2;
         }
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
-            to { text-shadow: 0 0 40px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.4); }
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: -50px auto 0;
-            padding: 80px 20px 40px;
-            position: relative;
-            z-index: 3;
-        }
-
-        .spots-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
-        }
-
-        .spot-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .spot-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .spot-card:hover::before {
-            left: 100%;
-        }
-
-        .spot-card:hover {
-            transform: translateY(-15px) scale(1.02);
-            box-shadow: 0 25px 50px rgba(0, 255, 136, 0.2);
-            border-color: rgba(0, 255, 136, 0.3);
-        }
-
-        .spot-emoji {
-            font-size: 5rem;
+        .card-header {
+            display: flex;
+            align-items: center;
             margin-bottom: 20px;
-            filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+        }
+
+        .location-icon {
+            font-size: 3rem;
+            margin-right: 15px;
+        }
+
+        .location-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin: 0;
         }
 
         .free-badge {
             background: linear-gradient(45deg, #ff4757, #ff3838);
             color: white;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: inline-block;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-            animation: bounce 2s infinite;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: auto;
+            box-shadow: 0 2px 10px rgba(255, 71, 87, 0.3);
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-5px); }
-            60% { transform: translateY(-3px); }
-        }
-
-        .spot-title {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #ffffff;
-        }
-
-        .spot-description {
-            color: #cccccc;
-            margin-bottom: 30px;
+        .location-description {
+            color: #666;
+            margin-bottom: 25px;
             line-height: 1.6;
-            font-size: 1rem;
         }
 
-        .spot-details {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
+        .location-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
+            margin-bottom: 25px;
         }
 
         .detail-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 70px;
+            text-align: center;
         }
 
         .detail-icon {
-            font-size: 2rem;
-            margin-bottom: 8px;
-            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3));
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        .detail-text {
-            font-size: 0.85rem;
-            color: #00ff88;
+        .detail-label {
+            font-size: 0.9rem;
+            color: #666;
             font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .map-button {
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            color: #000;
-            text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: 700;
+        .detail-value {
             font-size: 1rem;
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        .map-link {
             display: inline-block;
+            background: linear-gradient(45deg, #1976d2, #1565c0);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
         }
 
-        .map-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .map-button:hover::before {
-            left: 100%;
-        }
-
-        .map-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(0, 255, 136, 0.4);
+        .map-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
         }
 
         .coming-soon {
-            color: #888;
+            color: #999;
             font-style: italic;
-            font-size: 1rem;
-            opacity: 0.7;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(45deg, #f5f5f5, #e8e8e8);
+            border-radius: 10px;
+            margin-top: 15px;
         }
 
-        .floating-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .map-preview {
             width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
+            height: 150px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #1976d2;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .floating-elements::before,
-        .floating-elements::after {
-            content: '🅿️';
+        .map-preview::before {
+            content: '';
             position: absolute;
-            font-size: 2rem;
-            opacity: 0.1;
-            animation: float 20s linear infinite;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120'%3e%3crect width='300' height='120' fill='%23f5f5f5'/%3e%3crect x='0' y='40' width='300' height='40' fill='%239e9e9e'/%3e%3crect x='20' y='10' width='30' height='30' fill='%23bdbdbd'/%3e%3crect x='70' y='15' width='25' height='25' fill='%23bdbdbd'/%3e%3crect x='120' y='5' width='35' height='35' fill='%23bdbdbd'/%3e%3crect x='180' y='20' width='28' height='28' fill='%23bdbdbd'/%3e%3crect x='230' y='12' width='32' height='32' fill='%23bdbdbd'/%3e%3crect x='250' y='50' width='40' height='20' fill='%2381c784'/%3e%3ccircle cx='50' cy='60' r='4' fill='%23ff5722'/%3e%3ccircle cx='150' cy='60' r='3' fill='%234caf50'/%3e%3ccircle cx='250' cy='60' r='4' fill='%23ff9800'/%3e%3c/svg%3e") no-repeat center;
+            background-size: contain;
         }
 
-        .floating-elements::before {
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .floating-elements::after {
-            top: 70%;
-            right: 15%;
-            animation-delay: 10s;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(100vh) rotate(0deg); }
-            100% { transform: translateY(-100px) rotate(360deg); }
+        .map-preview::after {
+            content: '🗺️ Map Preview';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1976d2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            .hero p {
-                font-size: 1.1rem;
+            .header h1 {
+                font-size: 2rem;
             }
             .container {
-                margin-top: -30px;
-                padding-top: 60px;
-            }
-            .spots-grid {
                 grid-template-columns: 1fr;
-                gap: 30px;
+                margin-top: -20px;
+                padding-top: 40px;
             }
-            .spot-card {
-                padding: 30px 20px;
+            .location-details {
+                grid-template-columns: repeat(3, 1fr);
             }
-            .spot-emoji {
-                font-size: 4rem;
+            .parking-card {
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="floating-elements"></div>
-
-    <section class="hero">
-        <div class="hero-content">
-            <h1>🅿️ FREE PARKING</h1>
-            <p>Discover free parking locations</p>
+    <div class="overlay">
+        <div class="header">
+            <h1>🗺️ Free Parking Map</h1>
+            <p>Explore free parking locations with interactive map integration</p>
         </div>
-    </section>
 
-    <div class="container">
-        <div class="spots-grid">
-            <!-- Downtown Iselin -->
-            <div class="spot-card">
-                <div class="spot-emoji">🏙️</div>
-                <div class="free-badge">FREE</div>
-                <h3 class="spot-title">Iselin</h3>
-                <p class="spot-description">Prime street parking in the vibrant district. No restrictions, always available.</p>
-                <div class="spot-details">
+        <div class="container">
+            <!-- Location 1 -->
+            <div class="parking-card">
+                <div class="map-preview"></div>
+                <div class="card-header">
+                    <span class="location-icon">🏙️</span>
+                    <h2 class="location-title">Iselin</h2>
+                    <span class="free-badge">FREE</span>
+                </div>
+                <p class="location-description">
+                    Convenient street parking in the area with easy access to local attractions.
+                </p>
+                <div class="location-details">
                     <div class="detail-item">
                         <span class="detail-icon">📍</span>
-                        <span class="detail-text">0.5 km</span>
+                        <span class="detail-label">Distance</span>
+                        <span class="detail-value">0.5 mi</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-icon">🅿️</span>
-                        <span class="detail-text">Parking area</span>
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">Street</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-icon">⏰</span>
-                        <span class="detail-text">24/7</span>
+                        <span class="detail-label">Hours</span>
+                        <span class="detail-value">24/7</span>
                     </div>
                 </div>
-                <a href="https://maps.app.goo.gl/iRu1qkzsvAfSStGJ8" target="_blank" class="map-button">Navigate Here</a>
+                <a href="https://maps.app.goo.gl/iRu1qkzsvAfSStGJ8" target="_blank" class="map-link">View on Google Maps</a>
             </div>
 
-            <!-- Marconi Residential -->
-            <div class="spot-card">
-                <div class="spot-emoji">🏘️</div>
-                <div class="free-badge">FREE</div>
-                <h3 class="spot-title">Marconi</h3>
-                <p class="spot-description">parking</p>
-                <div class="spot-details">
+            <!-- Location 2 -->
+            <div class="parking-card">
+                <div class="map-preview"></div>
+                <div class="card-header">
+                    <span class="location-icon">🏘️</span>
+                    <h2 class="location-title">Marconi </h2>
+                    <span class="free-badge">FREE</span>
+                </div>
+                <p class="location-description">
+                    parking lot 
+                </p>
+                <div class="location-details">
                     <div class="detail-item">
                         <span class="detail-icon">📍</span>
-                        <span class="detail-text">1.2 km</span>
+                        <span class="detail-label">Distance</span>
+                        <span class="detail-value">1.2 mi</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-icon">🅿️</span>
-                        <span class="detail-text">Lot</span>
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">Lot</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">⏰</span>
+                        <span class="detail-label">Hours</span>
+                        <span class="detail-value">24/7</span>
                     </div>
                 </div>
-                <a href="https://maps.app.goo.gl/n1C3V2baYvmGp5go9" target="_blank" class="map-button">Navigate Here</a>
+                <a href="https://maps.app.goo.gl/n1C3V2baYvmGp5go9" target="_blank" class="map-link">View on Google Maps</a>
             </div>
+            
         </div>
     </div>
 </body>
