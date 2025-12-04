@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Parking Spots - Map View</title>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_TRACKING_ID');
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="map-pattern" patternUnits="userSpaceOnUse" width="100" height="100"><rect width="100" height="100" fill="%23f0f8ff"/><path d="M10 10 L90 10 L90 90 L10 90 Z" fill="none" stroke="%23add8e6" stroke-width="1"/><path d="M50 0 L50 100 M0 50 L100 50" stroke="%23add8e6" stroke-width="0.5"/><circle cx="50" cy="50" r="3" fill="%23ff6b6b"/><circle cx="20" cy="20" r="2" fill="%234ecdc4"/><circle cx="80" cy="30" r="2" fill="%23ffa500"/></pattern></defs><rect width="1000" height="1000" fill="url(%23map-pattern)"/></svg>') repeat,
+                    linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            background-attachment: fixed;
+            color: #333;
+        }
+
+        .overlay {
+            background: rgba(255, 255, 255, 0.9);
+            min-height: 100vh;
+            backdrop-filter: blur(1px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: -30px auto 0;
+            padding: 60px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .parking-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .parking-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1976d2, #4ecdc4, #ffa500);
+        }
+
+        .parking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: #1976d2;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .location-icon {
+            font-size: 3rem;
+            margin-right: 15px;
+        }
+
+        .location-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin: 0;
+        }
+
+        .free-badge {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: auto;
+            box-shadow: 0 2px 10px rgba(255, 71, 87, 0.3);
+        }
+
+        .location-description {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .location-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-icon {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        .map-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #1976d2, #1565c0);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .map-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+        }
+
+        .coming-soon {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(45deg, #f5f5f5, #e8e8e8);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .map-preview {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #1976d2;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-preview::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120'%3e%3crect width='300' height='120' fill='%23f5f5f5'/%3e%3crect x='0' y='40' width='300' height='40' fill='%239e9e9e'/%3e%3crect x='20' y='10' width='30' height='30' fill='%23bdbdbd'/%3e%3crect x='70' y='15' width='25' height='25' fill='%23bdbdbd'/%3e%3crect x='120' y='5' width='35' height='35' fill='%23bdbdbd'/%3e%3crect x='180' y='20' width='28' height='28' fill='%23bdbdbd'/%3e%3crect x='230' y='12' width='32' height='32' fill='%23bdbdbd'/%3e%3crect x='250' y='50' width='40' height='20' fill='%2381c784'/%3e%3ccircle cx='50' cy='60' r='4' fill='%23ff5722'/%3e%3ccircle cx='150' cy='60' r='3' fill='%234caf50'/%3e%3ccircle cx='250' cy='60' r='4' fill='%23ff9800'/%3e%3c/svg%3e") no-repeat center;
+            background-size: contain;
+        }
+
+        .map-preview::after {
+            content: '🗺️ Map Preview';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1976d2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+
+        .map-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-option {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .map-option:hover {
+            background: #e0e0e0;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .container {
+                grid-template-columns: 1fr;
+                margin-top: -20px;
+                padding-top: 40px;
+            }
+            .location-details {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .parking-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <div class="header">
+            <h1>🗺️ Oak Tree Road</h1>
+            <h1>Free Parking Lots</h1>
+            <p>Tap to Discover Free Parking Spots</p>
+        </div>
+
+        <div class="container">
+            <!-- Location 1 -->
+            <div class="parking-card">
+                <div class="map-preview"></div>
+                <div class="card-header">
+                    <span class="location-icon">🏙️</span>
+                    <h2 class="location-title">275 Lincoln Highway</h2>
+                    <span class="free-badge">FREE</span>
+                </div>
+                <p class="location-description">
+                    A convenient free parking spot located right beside the local market. Perfect for quick shopping trips, grab-and-go errands, or exploring nearby stalls. Easy access, safe area, and always open.
+                </p>
+                <div class="location-details">
+                    <div class="detail-item">
+                        <span class="detail-icon">📍</span>
+                        <span class="detail-label">Distance</span>
+                        <span class="detail-value" id="distance-1">Calculating...</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">🅿️</span>
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">Lot</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">⏰</span>
+                        <span class="detail-label">Hours</span>
+                        <span class="detail-value">24/7</span>
+                    </div>
+                </div>
+                <button class="map-link" onclick="showMapOptions('275 Lincoln Highway')">Open in Maps</button>
+            </div>
+
+            <!-- Location 2 -->
+            <div class="parking-card">
+                <div class="map-preview"></div>
+                <div class="card-header">
+                    <span class="location-icon">🏘️</span>
+                    <h2 class="location-title">29-31 Marconi Ave </h2>
+                    <span class="free-badge">FREE</span>
+                </div>
+                <p class="location-description">
+                    This free parking location sits just a short walk from the main market area. Whether you're stopping by for fresh produce, dining, or browsing shops, this spot offers simple, stress-free parking all day long.
+                </p>
+                <div class="location-details">
+                    <div class="detail-item">
+                        <span class="detail-icon">📍</span>
+                        <span class="detail-label">Distance</span>
+                        <span class="detail-value" id="distance-2">Calculating...</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">🅿️</span>
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">Lot</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">⏰</span>
+                        <span class="detail-label">Hours</span>
+                        <span class="detail-value">24/7</span>
+                    </div>
+                </div>
+                <button class="map-link" onclick="showMapOptions('29-31 Marconi Ave')">Open in Maps</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Open Location in Maps</h3>
+            <div class="map-options" id="mapOptions">
+                <!-- Options will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parking spot coordinates (approximate based on addresses)
+        const parkingSpots = [
+            { id: 1, lat: 39.9259, lng: -75.1196, address: '275 Lincoln Highway' }, // Approximate for Camden, NJ area
+            { id: 2, lat: 39.9259, lng: -75.1196, address: '29-31 Marconi Ave' }   // Approximate for Camden, NJ area
+        ];
+
+        let userLocation = null;
+
+        // Get user's location
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        updateDistances();
+                        // Track location access granted
+                        gtag('event', 'location_access_granted', {
+                            'event_category': 'engagement',
+                            'event_label': 'geolocation'
+                        });
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                        // Fallback: show static distances or error message
+                        document.getElementById('distance-1').textContent = 'Location access denied';
+                        document.getElementById('distance-2').textContent = 'Location access denied';
+                        // Track location access denied
+                        gtag('event', 'location_access_denied', {
+                            'event_category': 'engagement',
+                            'event_label': 'geolocation'
+                        });
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+                // Track geolocation not supported
+                gtag('event', 'geolocation_not_supported', {
+                    'event_category': 'engagement',
+                    'event_label': 'geolocation'
+                });
+            }
+        }
+
+        // Calculate distance using Haversine formula
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 3959; // Radius of Earth in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            return distance.toFixed(1) + ' mi';
+        }
+
+        // Update distance displays
+        function updateDistances() {
+            if (!userLocation) return;
+
+            parkingSpots.forEach(spot => {
+                const distance = calculateDistance(userLocation.lat, userLocation.lng, spot.lat, spot.lng);
+                document.getElementById(`distance-${spot.id}`).textContent = distance;
+            });
+        }
+
+        function showMapOptions(address) {
+            const modal = document.getElementById('mapModal');
+            const optionsContainer = document.getElementById('mapOptions');
+            optionsContainer.innerHTML = '';
+
+            let maps = [];
+
+            if (userLocation) {
+                // If user location is available, provide directions
+                maps = [
+                    { name: 'Google Maps', url: `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(address)}` },
+                    { name: 'Apple Maps', url: `https://maps.apple.com/?saddr=${userLocation.lat},${userLocation.lng}&daddr=${encodeURIComponent(address)}` },
+                    { name: 'Waze', url: `https://waze.com/ul?ll=${userLocation.lat},${userLocation.lng}&navigate=yes&zoom=17&q=${encodeURIComponent(address)}` }
+                ];
+            } else {
+                // Fallback to just searching the address
+                maps = [
+                    { name: 'Google Maps', url: `https://www.google.com/maps?q=${encodeURIComponent(address)}` },
+                    { name: 'Apple Maps', url: `https://maps.apple.com/?q=${encodeURIComponent(address)}` },
+                    { name: 'Waze', url: `https://waze.com/ul?q=${encodeURIComponent(address)}` }
+                ];
+            }
+
+            maps.forEach(map => {
+                const link = document.createElement('a');
+                link.href = map.url;
+                link.target = '_blank';
+                link.className = 'map-option';
+                link.textContent = `Open in ${map.name}`;
+                optionsContainer.appendChild(link);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('mapModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('mapModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Initialize on page load
+        window.onload = getUserLocation;
+    </script>
+</body>
+</html>
+
+
+
+<!-- Feel free to ask if you need any further assistance! # 
+
+<p><a href="mailto:ominator523@gmail.com">Send email</a></p> -->
