@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Free Parking Spots - Map View</title>
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'GA_TRACKING_ID');
-    </script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -393,31 +386,16 @@
                             lng: position.coords.longitude
                         };
                         updateDistances();
-                        // Track location access granted
-                        gtag('event', 'location_access_granted', {
-                            'event_category': 'engagement',
-                            'event_label': 'geolocation'
-                        });
                     },
                     (error) => {
                         console.error('Error getting location:', error);
                         // Fallback: show static distances or error message
                         document.getElementById('distance-1').textContent = 'Location access denied';
                         document.getElementById('distance-2').textContent = 'Location access denied';
-                        // Track location access denied
-                        gtag('event', 'location_access_denied', {
-                            'event_category': 'engagement',
-                            'event_label': 'geolocation'
-                        });
                     }
                 );
             } else {
                 alert('Geolocation is not supported by this browser.');
-                // Track geolocation not supported
-                gtag('event', 'geolocation_not_supported', {
-                    'event_category': 'engagement',
-                    'event_label': 'geolocation'
-                });
             }
         }
 
@@ -496,9 +474,3 @@
     </script>
 </body>
 </html>
-
-
-
-<!-- Feel free to ask if you need any further assistance! # 
-
-<p><a href="mailto:ominator523@gmail.com">Send email</a></p> -->
