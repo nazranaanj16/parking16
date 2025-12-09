@@ -118,7 +118,7 @@
 
         .location-details {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 25px;
         }
@@ -304,11 +304,6 @@
                 </p>
                 <div class="location-details">
                     <div class="detail-item">
-                        <span class="detail-icon">📍</span>
-                        <span class="detail-label">Distance</span>
-                        <span class="detail-value" id="distance-1">Calculating...</span>
-                    </div>
-                    <div class="detail-item">
                         <span class="detail-icon">🅿️</span>
                         <span class="detail-label">Type</span>
                         <span class="detail-value">Lot</span>
@@ -319,7 +314,7 @@
                         <span class="detail-value">24/7</span>
                     </div>
                 </div>
-                <button class="map-link" onclick="showMapOptions('275 Lincoln Highway')">Open in Maps</button>
+                <button class="map-link" onclick="showMapOptions(40.57276291934857, -74.32361384602856, '275 Lincoln Highway')">Open in Maps</button>
             </div>
 
             <!-- Location 2 -->
@@ -335,11 +330,6 @@
                 </p>
                 <div class="location-details">
                     <div class="detail-item">
-                        <span class="detail-icon">📍</span>
-                        <span class="detail-label">Distance</span>
-                        <span class="detail-value" id="distance-2">Calculating...</span>
-                    </div>
-                    <div class="detail-item">
                         <span class="detail-icon">🅿️</span>
                         <span class="detail-label">Type</span>
                         <span class="detail-value">Lot</span>
@@ -350,7 +340,7 @@
                         <span class="detail-value">24/7</span>
                     </div>
                 </div>
-                <button class="map-link" onclick="showMapOptions('29-31 Marconi Ave')">Open in Maps</button>
+                <button class="map-link" onclick="showMapOptions(40.574897041216985, -74.32495509460564, '29-31 Marconi Ave')">Open in Maps</button>
             </div>
 
         </div>
@@ -368,82 +358,23 @@
     </div>
 
     <script>
-        // Parking spot coordinates (approximate based on addresses)
+        // Parking spot coordinates (fixed locations)
         const parkingSpots = [
-            { id: 1, lat: 39.9259, lng: -75.1196, address: '275 Lincoln Highway' }, // Approximate for Camden, NJ area
-            { id: 2, lat: 39.9259, lng: -75.1196, address: '29-31 Marconi Ave' }   // Approximate for Camden, NJ area
+            { id: 1, lat: 40.57276291934857, lng: -74.32361384602856, address: '275 Lincoln Highway' },
+            { id: 2, lat: 40.574897041216985, lng: -74.32495509460564, address: '29-31 Marconi Ave' }
         ];
 
-        let userLocation = null;
-
-        // Get user's location
-        function getUserLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        userLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        updateDistances();
-                    },
-                    (error) => {
-                        console.error('Error getting location:', error);
-                        // Fallback: show static distances or error message
-                        document.getElementById('distance-1').textContent = 'Location access denied';
-                        document.getElementById('distance-2').textContent = 'Location access denied';
-                    }
-                );
-            } else {
-                alert('Geolocation is not supported by this browser.');
-            }
-        }
-
-        // Calculate distance using Haversine formula
-        function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 3959; // Radius of Earth in miles
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const distance = R * c;
-            return distance.toFixed(1) + ' mi';
-        }
-
-        // Update distance displays
-        function updateDistances() {
-            if (!userLocation) return;
-
-            parkingSpots.forEach(spot => {
-                const distance = calculateDistance(userLocation.lat, userLocation.lng, spot.lat, spot.lng);
-                document.getElementById(`distance-${spot.id}`).textContent = distance;
-            });
-        }
-
-        function showMapOptions(address) {
+        function showMapOptions(destLat, destLng, address) {
             const modal = document.getElementById('mapModal');
             const optionsContainer = document.getElementById('mapOptions');
             optionsContainer.innerHTML = '';
 
-            let maps = [];
-
-            if (userLocation) {
-                // If user location is available, provide directions
-                maps = [
-                    { name: 'Google Maps', url: `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(address)}` },
-                    { name: 'Apple Maps', url: `https://maps.apple.com/?saddr=${userLocation.lat},${userLocation.lng}&daddr=${encodeURIComponent(address)}` },
-                    { name: 'Waze', url: `https://waze.com/ul?ll=${userLocation.lat},${userLocation.lng}&navigate=yes&zoom=17&q=${encodeURIComponent(address)}` }
-                ];
-            } else {
-                // Fallback to just searching the address
-                maps = [
-                    { name: 'Google Maps', url: `https://www.google.com/maps?q=${encodeURIComponent(address)}` },
-                    { name: 'Apple Maps', url: `https://maps.apple.com/?q=${encodeURIComponent(address)}` },
-                    { name: 'Waze', url: `https://waze.com/ul?q=${encodeURIComponent(address)}` }
-                ];
-            }
+            // Just search the address with coordinates
+            const maps = [
+                { name: 'Google Maps', url: `https://www.google.com/maps?q=${destLat},${destLng}` },
+                { name: 'Apple Maps', url: `https://maps.apple.com/?q=${destLat},${destLng}` },
+                { name: 'Waze', url: `https://waze.com/ul?q=${destLat},${destLng}` }
+            ];
 
             maps.forEach(map => {
                 const link = document.createElement('a');
