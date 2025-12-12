@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,8 +48,7 @@
             margin: 0 auto;
             padding: 60px 20px;
             display: flex;
-            flex-direction: row;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
             gap: 40px;
@@ -63,6 +63,7 @@
             border: 2px solid transparent;
             position: relative;
             overflow: hidden;
+            min-height: 420px;
         }
 
         .parking-card::before {
@@ -314,7 +315,7 @@
                         <span class="detail-value">24/7</span>
                     </div>
                 </div>
-                <button class="map-link" onclick="showMapOptions(40.57276291934857, -74.32361384602856, '275 Lincoln Highway')">Open in Maps</button>
+                <button class="map-link" data-lat="40.57276291934857" data-lng="-74.32361384602856" data-address="275 Lincoln Highway">Open in Maps</button>
             </div>
 
             <!-- Location 2 -->
@@ -340,7 +341,33 @@
                         <span class="detail-value">24/7</span>
                     </div>
                 </div>
-                <button class="map-link" onclick="showMapOptions(40.574897041216985, -74.32495509460564, '29-31 Marconi Ave')">Open in Maps</button>
+                <button class="map-link" data-lat="40.574897041216985" data-lng="-74.32495509460564" data-address="29-31 Marconi Ave">Open in Maps</button>
+            </div>
+
+            <!-- Location 3 -->
+            <div class="parking-card">
+                <div class="map-preview"></div>
+                <div class="card-header">
+                    <span class="location-icon">🏠</span>
+                    <h2 class="location-title">29 Wilus Way</h2>
+                    <span class="free-badge">FREE</span>
+                </div>
+                <p class="location-description">
+                    A residential area parking spot available during specific hours. Perfect for evening visits or weekend outings in the neighborhood.
+                </p>
+                <div class="location-details">
+                    <div class="detail-item">
+                        <span class="detail-icon">🅿️</span>
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">Street</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">⏰</span>
+                        <span class="detail-label">Hours</span>
+                        <span class="detail-value">Weekdays after 4 PM, Weekends all day</span>
+                    </div>
+                </div>
+                <button class="map-link" data-lat="40.574103969310336" data-lng="-74.32247403777384" data-address="29 Wilus Way">Open in Maps</button>
             </div>
 
         </div>
@@ -361,7 +388,8 @@
         // Parking spot coordinates (fixed locations)
         const parkingSpots = [
             { id: 1, lat: 40.57276291934857, lng: -74.32361384602856, address: '275 Lincoln Highway' },
-            { id: 2, lat: 40.574897041216985, lng: -74.32495509460564, address: '29-31 Marconi Ave' }
+            { id: 2, lat: 40.574897041216985, lng: -74.32495509460564, address: '29-31 Marconi Ave' },
+            { id: 3, lat: 40.574103969310336, lng: -74.32247403777384, address: '29 Wilus Way' }
         ];
 
         function showMapOptions(destLat, destLng, address) {
@@ -402,6 +430,19 @@
 
         // Initialize on page load
         // Removed getUserLocation as distance functionality was removed
+
+        // Add event listeners to map-link buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapLinks = document.querySelectorAll('.map-link');
+            mapLinks.forEach(button => {
+                button.addEventListener('click', function() {
+                    const lat = this.getAttribute('data-lat');
+                    const lng = this.getAttribute('data-lng');
+                    const address = this.getAttribute('data-address');
+                    showMapOptions(lat, lng, address);
+                });
+            });
+        });
     </script>
 </body>
 </html>
